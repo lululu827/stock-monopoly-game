@@ -1,0 +1,260 @@
+body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: #0f172a;
+  color: #e5e7eb;
+  margin: 0;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.game-container {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  align-items: flex-start;
+}
+
+/* =========================
+   棋盤容器（只負責定位＋外觀）
+========================= */
+.board {
+  position: relative;       /* stock-screen 需要定位 */
+  background: #020617;
+  padding: 4px;
+  border-radius: 10px;
+}
+
+/* 真正的 6×6 格子 grid */
+.tiles-container {
+  display: grid;
+  grid-template-columns: repeat(6, 80px);
+  grid-template-rows: repeat(6, 80px);
+  gap: 4px;
+}
+
+
+/* 格子外觀 */
+.tile {
+  position: relative;
+  background: #1e293b;
+  border-radius: 6px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* 中央空白格（JS 建出來的 tile center） */
+.tile.center {
+  background: transparent;
+  pointer-events: none;
+}
+
+/* 不同格子顏色 */
+.stock  { background: #2563eb; }
+.market { background: #ea580c; }
+.cash   { background: #16a34a; }
+.chance { background: #7c3aed; }
+.fate   { background: #dc2626; }
+
+/* 出發格 */
+.tile.start {
+  background: gold;
+  color: #000;
+  font-weight: bold;
+}
+
+/* =========================
+   棋子：壓在格子中心
+========================= */
+.player-token {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 22px;
+  pointer-events: none;
+}
+
+/* =========================
+   股票螢幕：固定在棋盤中央，不參與排版
+========================= */
+.stock-screen {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+
+  width: 200px;
+  height: 160px;          /* ★固定高度，不會因內容變動造成錯覺 */
+  padding: 14px 16px;
+  box-sizing: border-box;
+
+  background: rgba(2, 6, 23, 0.92);
+  border: 2px solid #22c55e;
+  border-radius: 10px;
+
+  font-family: ui-monospace, Menlo, Consolas, "Courier New", monospace;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #22c55e;
+
+  z-index: 10;
+  pointer-events: none;
+
+  /* ★避免字體粗細/寬度變化造成抖動 */
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* 紅漲綠跌 */
+.stock-up   { color: #dc2626; }   /* 紅漲 */
+.stock-down { color: #16a34a; }   /* 綠跌 */
+
+/* =========================
+   右側資訊面板
+========================= */
+.info {
+  width: 640px;                 /* ✅更寬 */
+  background: #020617;
+  padding: 18px;
+  border-radius: 12px;
+}
+
+.controls {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.controls button {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  cursor: pointer;
+  border: none;
+  border-radius: 10px;
+}
+
+.controls button:hover { opacity: 0.9; }
+
+.log {
+  margin-top: 12px;
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 54px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr; /* 左稍大（玩家狀態多）右稍小（決策紀錄） */
+  gap: 18px;
+  align-items: start;
+}
+
+.info h2, .decision-panel h3 {
+  margin: 0 0 12px 0;
+  font-size: 22px;
+  letter-spacing: 0.5px;
+}
+
+.decision-panel h3 {
+  margin: 0 0 8px 0;
+}
+
+.decision-log {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 12px;
+  max-height: 360px;            /* ✅與 players 一致 */
+  overflow: auto;
+  font-size: 13px;
+  line-height: 1.65;
+  white-space: normal;          /* ✅避免擠成一行 */
+}
+
+#players {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 12px;
+  max-height: 360px;            /* ✅高度上限 */
+  overflow: auto;               /* ✅多就捲動 */
+}
+
+/* 玩家每一塊資訊：卡片化 */
+#players > div {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  line-height: 1.55;            /* ✅更好讀 */
+  font-size: 14px;
+}
+
+/* ===== Modal ===== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: grid;
+  place-items: center;
+  z-index: 9999;
+}
+.hidden { display: none; }
+
+.modal {
+  width: min(520px, calc(100vw - 40px));
+  background: #0b1220;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+}
+
+.modal-header { margin-bottom: 10px; }
+.modal-title { font-size: 18px; font-weight: 700; }
+.modal-sub { margin-top: 4px; font-size: 13px; color: rgba(229,231,235,0.75); }
+
+.modal-body {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 14px;
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+.modal-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.btn {
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: none;
+  font-size: 14px;
+}
+.btn-primary { background: #2563eb; color: white; }
+.btn-ghost {
+  background: rgba(255,255,255,0.06);
+  color: #e5e7eb;
+  border: 1px solid rgba(255,255,255,0.10);
+}
