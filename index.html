@@ -2,76 +2,139 @@
 <html lang="zh-TW">
 
 <head>
-    <meta charset="UTF-8">
-    <title>證券市場大富翁</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>📈 股市大富翁</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-<!-- 事件視窗 Modal -->
-<div id="event-modal" class="modal-backdrop hidden">
-  <div class="modal">
-    <div class="modal-header">
-      <div id="modal-title" class="modal-title">事件</div>
-      <div id="modal-sub" class="modal-sub"></div>
-    </div>
-
-    <div id="modal-body" class="modal-body"></div>
-
-    <div class="modal-actions">
-      <button id="modal-cancel" class="btn btn-ghost">略過</button>
-      <button id="modal-ok" class="btn btn-primary">執行</button>
-    </div>
-  </div>
-</div>
 
 <body>
 
-    <h1>📈 證券市場大富翁</h1>
+  <!-- ===== 右上角功能鍵 ===== -->
+  <div class="top-buttons">
+    <button onclick="openIntro()">📘 遊戲說明</button>
+    <button onclick="openDecisionLog()">📜 決策紀錄</button>
+    <button onclick="resetGame()">🔄 重新開始</button>
+  </div>
 
-    <div class="game-container">
+  <h1 class="game-title">📈 股市大富翁</h1>
 
-        <!-- 棋盤 -->
-        <!-- 棋盤 -->
-        <div class="board" id="board">
-            <!-- 股票螢幕：固定在棋盤中央（放在 tiles-container 之外） -->
-            <div id="stock-screen" class="stock-screen"></div>
-
-            <!-- 棋盤格子（6x6） -->
-            <div id="tiles-container" class="tiles-container"></div>
-        </div>
-
-
+  <!-- ===== 主遊戲區 ===== -->
+  <div class="game-container">
+    <!-- ===== 行為操作區（不屬於棋盤） ===== -->
+    
 
 
-        <!-- 資訊區 -->
-        <div class="info">
-  <h2>玩家狀態</h2>
+    <!-- ===== 棋盤（置中） ===== -->
+    <div class="board" id="board">
+      <!-- 股票螢幕 -->
+      <div id="stock-screen" class="stock-screen"></div>
 
-  <div class="info-grid">
-    <!-- 左欄：玩家 -->
-    <div>
-      <div id="players"></div>
+      <!-- 棋盤格 -->
+      <div id="tiles-container" class="tiles-container"></div>
+
+      <!-- ===== 四角玩家 HUD ===== -->
+      <div id="player-0" class="player-hud corner tl"></div>
+      <div id="player-1" class="player-hud corner tr"></div>
+      <div id="player-2" class="player-hud corner bl"></div>
+      <div id="player-3" class="player-hud corner br"></div>
     </div>
 
-    <!-- 右欄：決策紀錄 -->
-    <div class="decision-panel">
-      <h3>📋 決策紀錄</h3>
-      <div id="decision-log" class="decision-log"></div>
+
+  </div>
+  <div class="action-bar">
+      <div id="dice-button-wrapper" class="dice-wrapper hidden">
+        <button id="dice-button" onclick="onDiceClick()">🎲 擲骰</button>
+      </div>
+    </div>
+
+  <!-- 🎲 彈跳擲骰按鈕 -->
+  <div id="dice-button-wrapper" class="dice-wrapper hidden">
+    <button id="dice-button" onclick="onDiceClick()">
+      🎲 擲骰
+    </button>
+  </div>
+
+
+  <!-- ===== 遊戲提示列 ===== -->
+  <div id="log" class="log-center"></div>
+
+  <!-- ===== 🎲 擲骰彈窗（自動出現） ===== -->
+  <div id="dice-modal" class="modal-backdrop hidden">
+    <div class="modal dice-modal">
+      <h2>🎲 擲骰中…</h2>
+      <div id="dice-face" class="dice-face">🎲</div>
+      <div id="dice-result" class="dice-result"></div>
     </div>
   </div>
 
-  <div class="controls">
-    <button onclick="rollDice()">🎲 擲骰</button>
-    <button onclick="nextTurn()">▶ 下一回合</button>
-    <button onclick="resetGame()">🔁 重置</button>
+  <!-- ===== 事件視窗 ===== -->
+  <div id="event-modal" class="modal-backdrop hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <div id="modal-title" class="modal-title"></div>
+        <div id="modal-sub" class="modal-sub"></div>
+      </div>
+      <div id="modal-body" class="modal-body"></div>
+      <div class="modal-actions">
+        <button id="modal-cancel" class="btn btn-ghost">略過</button>
+        <button id="modal-ok" class="btn btn-primary">確認</button>
+      </div>
+    </div>
   </div>
 
-  <div id="log" class="log"></div>
-</div>
+  <!-- ===== 📈 股票交易視窗 ===== -->
+  <div id="trade-modal" class="modal-backdrop hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">📈 股票交易（單位：張）</div>
+        <div class="modal-sub" id="trade-info"></div>
+      </div>
+      <div class="modal-body" id="trade-body"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeTrade(); endTurn();">取消</button>
 
-
+        <button class="btn btn-primary" onclick="confirmTrade()">確認交易</button>
+      </div>
     </div>
+  </div>
 
-    <script src="game.js"></script>
+  <!-- ===== 📘 遊戲說明（開場顯示） ===== -->
+  <div id="start-modal" class="start-backdrop">
+    <div class="start-modal">
+      <button class="start-close" onclick="startGame()">✕</button>
+
+      <h2>📊 股市大富翁｜遊戲說明</h2>
+
+      <p class="start-desc">
+        本遊戲模擬股票市場波動與投資決策，目標是累積最高「總資產」。
+      </p>
+
+      <ul class="start-list">
+        <li>💰 每位玩家初始現金 $1,000,000</li>
+        <li>📦 三檔股票各隨機 50–100 張</li>
+        <li>🎲 系統自動擲骰並移動</li>
+        <li>📈 每回合市場價格都會變動</li>
+        <li>⚠️ 現金為 0 且無股票即破產</li>
+      </ul>
+
+      <button class="start-btn" onclick="startGame()">開始遊戲</button>
+    </div>
+  </div>
+
+  <!-- ===== 📜 決策紀錄 ===== -->
+  <div id="decision-modal" class="modal-backdrop hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">📜 決策紀錄</div>
+      </div>
+      <div id="decision-log-modal" class="decision-log"></div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" onclick="closeDecisionLog()">關閉</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
 </body>
 
 </html>

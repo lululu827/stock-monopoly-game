@@ -1,3 +1,6 @@
+/* =========================
+   全域
+========================= */
 body {
   font-family: "Segoe UI", Arial, sans-serif;
   background: #0f172a;
@@ -5,30 +8,34 @@ body {
   margin: 0;
   padding: 20px;
 }
-
-h1 {
-  text-align: center;
-  margin-bottom: 20px;
+.top-buttons {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  gap: 10px;
+  z-index: 10000;
 }
+
+
+.game-title {
+  margin-top: 80px; /* ⭐ 預留給功能列 */
+  text-align: center;
+}
+
 
 .game-container {
+  height: calc(100vh - 220px);
   display: flex;
   justify-content: center;
-  gap: 28px;
-  align-items: flex-start;
+  align-items: center;
+  position: relative;
 }
 
-/* =========================
-   棋盤容器（只負責定位＋外觀）
-========================= */
 .board {
-  position: relative;       /* stock-screen 需要定位 */
-  background: #020617;
-  padding: 4px;
-  border-radius: 10px;
+  margin: 0 auto;
 }
 
-/* 真正的 6×6 格子 grid */
 .tiles-container {
   display: grid;
   grid-template-columns: repeat(6, 80px);
@@ -36,12 +43,10 @@ h1 {
   gap: 4px;
 }
 
-
-/* 格子外觀 */
 .tile {
   position: relative;
   background: #1e293b;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 12px;
   display: flex;
   align-items: center;
@@ -49,78 +54,80 @@ h1 {
   text-align: center;
 }
 
-/* 中央空白格（JS 建出來的 tile center） */
+/* 中央空白 */
 .tile.center {
   background: transparent;
   pointer-events: none;
 }
 
-/* 不同格子顏色 */
-.stock  { background: #2563eb; }
-.market { background: #ea580c; }
-.cash   { background: #16a34a; }
-.chance { background: #7c3aed; }
-.fate   { background: #dc2626; }
+/* =========================
+   格子類型（對齊 JS）
+========================= */
+.tile-stock  { background: #2563eb; }
+.tile-market { background: #ea580c; }
+.tile-cash   { background: #16a34a; }
+.tile-chance { background: #7c3aed; }
+.tile-fate   { background: #dc2626; }
 
-/* 出發格 */
-.tile.start {
+/* 出發 */
+.tile[data-pos="0"] {
   background: gold;
   color: #000;
   font-weight: bold;
 }
 
 /* =========================
-   棋子：壓在格子中心
+   棋子（避免重疊）
 ========================= */
 .player-token {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   font-size: 22px;
   pointer-events: none;
 }
 
+.tile .player-token:nth-child(1) { top: 22%; left: 22%; }
+.tile .player-token:nth-child(2) { top: 22%; right: 22%; }
+.tile .player-token:nth-child(3) { bottom: 22%; left: 22%; }
+.tile .player-token:nth-child(4) { bottom: 22%; right: 22%; }
+
 /* =========================
-   股票螢幕：固定在棋盤中央，不參與排版
+   股票螢幕
 ========================= */
 .stock-screen {
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: 45%;
   transform: translate(-50%, -50%);
-
   width: 200px;
-  height: 160px;          /* ★固定高度，不會因內容變動造成錯覺 */
+  height: 160px;
   padding: 14px 16px;
   box-sizing: border-box;
-
   background: rgba(2, 6, 23, 0.92);
   border: 2px solid #22c55e;
-  border-radius: 10px;
-
-  font-family: ui-monospace, Menlo, Consolas, "Courier New", monospace;
+  border-radius: 12px;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
   font-size: 14px;
   line-height: 1.7;
   color: #22c55e;
-
   z-index: 10;
   pointer-events: none;
-
-  /* ★避免字體粗細/寬度變化造成抖動 */
   font-variant-numeric: tabular-nums;
 }
 
+/* 漲跌 */
+.stock-up   { color: #dc2626; animation: blink 0.4s; }
+.stock-down { color: #16a34a; animation: blink 0.4s; }
 
-/* 紅漲綠跌 */
-.stock-up   { color: #dc2626; }   /* 紅漲 */
-.stock-down { color: #16a34a; }   /* 綠跌 */
+@keyframes blink {
+  0% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
 
 /* =========================
-   右側資訊面板
+   右側資訊
 ========================= */
 .info {
-  width: 640px;                 /* ✅更寬 */
+  width: 640px;
   background: #020617;
   padding: 18px;
   border-radius: 12px;
@@ -153,58 +160,64 @@ h1 {
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.06);
 }
-
+.log-center {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+  opacity: 0.85;
+  z-index: 10000;
+  pointer-events: none;
+}
 
 .info-grid {
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr; /* 左稍大（玩家狀態多）右稍小（決策紀錄） */
+  grid-template-columns: 1.1fr 0.9fr;
   gap: 18px;
-  align-items: start;
 }
 
 .info h2, .decision-panel h3 {
   margin: 0 0 12px 0;
   font-size: 22px;
-  letter-spacing: 0.5px;
 }
 
-.decision-panel h3 {
-  margin: 0 0 8px 0;
+/* 玩家面板 */
+#players {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
 }
 
+.player-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.player-card.active {
+  outline: 2px solid #22c55e;
+}
+
+
+/* =========================
+   決策紀錄
+========================= */
 .decision-log {
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 12px;
   padding: 12px;
-  max-height: 360px;            /* ✅與 players 一致 */
+  max-height: 360px;
   overflow: auto;
   font-size: 13px;
   line-height: 1.65;
-  white-space: normal;          /* ✅避免擠成一行 */
 }
 
-#players {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 12px;
-  padding: 12px;
-  max-height: 360px;            /* ✅高度上限 */
-  overflow: auto;               /* ✅多就捲動 */
-}
-
-/* 玩家每一塊資訊：卡片化 */
-#players > div {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 10px;
-  padding: 10px 12px;
-  margin-bottom: 10px;
-  line-height: 1.55;            /* ✅更好讀 */
-  font-size: 14px;
-}
-
-/* ===== Modal ===== */
+/* =========================
+   Modal
+========================= */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -213,29 +226,34 @@ h1 {
   place-items: center;
   z-index: 9999;
 }
+
 .hidden { display: none; }
 
 .modal {
   width: min(520px, calc(100vw - 40px));
+  max-height: calc(100vh - 80px); /* ⭐ 不超過螢幕 */
+  display: flex;
+  flex-direction: column;
   background: #0b1220;
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 14px;
   padding: 16px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+  box-sizing: border-box;
 }
 
-.modal-header { margin-bottom: 10px; }
+
 .modal-title { font-size: 18px; font-weight: 700; }
 .modal-sub { margin-top: 4px; font-size: 13px; color: rgba(229,231,235,0.75); }
 
 .modal-body {
+  flex: 1;                    /* ⭐ 撐滿中間 */
+  overflow-y: auto;           /* ⭐ 超出就滾 */
+  max-height: 60vh;           /* ⭐ 保險限制 */
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.07);
   border-radius: 12px;
   padding: 12px;
   font-size: 14px;
-  line-height: 1.7;
-  white-space: pre-line;
 }
 
 .modal-actions {
@@ -243,7 +261,9 @@ h1 {
   display: flex;
   gap: 10px;
   justify-content: flex-end;
+  flex-shrink: 0; /* ⭐ 不被擠掉 */
 }
+
 
 .btn {
   padding: 10px 14px;
@@ -252,9 +272,249 @@ h1 {
   border: none;
   font-size: 14px;
 }
+
 .btn-primary { background: #2563eb; color: white; }
+
 .btn-ghost {
   background: rgba(255,255,255,0.06);
   color: #e5e7eb;
   border: 1px solid rgba(255,255,255,0.10);
+}
+/* =========================
+   遊戲開始說明視窗
+========================= */
+.start-backdrop {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at top, rgba(15,23,42,0.95), rgba(2,6,23,0.98));
+  display: grid;
+  place-items: center;
+  z-index: 10000;
+}
+
+.start-modal {
+  position: relative;
+  width: min(620px, calc(100vw - 40px));
+  background: #020617;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 18px;
+  padding: 28px 32px 32px;
+  color: #e5e7eb;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+  animation: popIn 0.35s ease-out;
+}
+
+@keyframes popIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+.start-modal h2 {
+  margin: 0 0 14px 0;
+  font-size: 26px;
+  letter-spacing: 0.5px;
+}
+
+.start-desc {
+  font-size: 15px;
+  margin-bottom: 14px;
+  color: rgba(229,231,235,0.85);
+}
+
+.start-list {
+  padding-left: 18px;
+  line-height: 1.8;
+  margin-bottom: 22px;
+  font-size: 15px;
+}
+
+.start-list li {
+  margin-bottom: 6px;
+}
+
+.start-btn {
+  width: 100%;
+  padding: 14px;
+  font-size: 18px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, #2563eb, #22c55e);
+  color: white;
+  font-weight: 600;
+}
+
+.start-btn:hover {
+  opacity: 0.95;
+}
+
+.start-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: rgba(255,255,255,0.08);
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  color: #e5e7eb;
+  font-size: 16px;
+}
+.trade-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-size: 14px;
+}
+
+.trade-row.header {
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.trade-row input {
+  width: 80px;
+  padding: 6px;
+  border-radius: 6px;
+  border: none;
+  text-align: center;
+}
+
+.trade-action {
+  margin-top: 10px;
+  font-size: 14px;
+}
+/* ===== 玩家 HUD ===== */
+.player-hud {
+  position: absolute;
+  width: 230px;                 /* ⭐ 加寬 */
+  min-height: 150px;            /* ⭐ 撐開高度 */
+  padding: 14px 16px;           /* ⭐ 內距放鬆 */
+  border-radius: 16px;
+  background: rgba(2,6,23,0.92);
+  border: 2px solid rgba(255,255,255,0.12);
+  font-size: 13px;
+  line-height: 1.6;             /* ⭐ 可讀性提升 */
+  transition: all .25s ease;
+  z-index: 20;
+}
+
+
+/* 四角定位 */
+.corner.tl { top: -10px; left: -10px; }
+.corner.tr { top: -10px; right: -10px; }
+.corner.bl { bottom: -10px; left: -10px; }
+.corner.br { bottom: -10px; right: -10px; }
+
+/* 當前玩家高亮 */
+.player-hud.active {
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  border-color: #60a5fa;
+  box-shadow: 0 0 20px rgba(96,165,250,.8);
+  transform: scale(1.05);
+}
+
+/* 非當前玩家淡化 */
+.player-hud:not(.active) {
+  opacity: 0.75;
+}
+
+
+/* icon 放大 */
+.player-hud .icon {
+  font-size: 22px;
+}
+
+/* 🎲 擲骰浮動按鈕 */
+.dice-wrapper {
+  position: fixed;
+  left: 50%;
+  bottom: 160px;              /* ⭐ 明確 UI 操作區 */
+  transform: translateX(-50%);
+  z-index: 5000;
+
+  pointer-events: auto;
+}
+.dice-rolling {
+  animation: shake 0.4s infinite;
+}
+
+@keyframes shake {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(8deg); }
+  50% { transform: rotate(-8deg); }
+  75% { transform: rotate(6deg); }
+  100% { transform: rotate(0deg); }
+}
+
+
+@keyframes dice-pop {
+  from {
+    transform: translateX(-50%) scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+  }
+}
+
+#dice-button {
+  font-size: 20px;
+  padding: 16px 28px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  background: linear-gradient(135deg, #2563eb, #22c55e);
+  color: white;
+  box-shadow: 0 10px 30px rgba(34,197,94,0.45);
+}
+
+#dice-button:hover {
+  transform: scale(1.05);
+}
+
+.hidden {
+  display: none;
+}
+/* ===== 股票交易：買賣按鈕（寶藍選中 / 霧灰未選） ===== */
+
+.trade-row .trade-buttons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.trade-row .trade-buttons button {
+  flex: 1;
+  padding: 10px 0;
+  border-radius: 10px;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  /* ❄️ 預設：霧灰（未選） */
+  background: linear-gradient(135deg, #334155, #475569);
+  color: #cbd5e1;
+  opacity: 0.7;
+}
+
+/* ⭐ 選中狀態：寶藍（唯一強調色） */
+.trade-row .trade-buttons button.active {
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  color: #eff6ff;
+  opacity: 1;
+  transform: scale(1.06);
+  box-shadow: 0 0 18px rgba(37, 99, 235, 0.55);
+}
+
+/* hover 輔助（不改語意） */
+.trade-row .trade-buttons button:hover:not(.active) {
+  opacity: 0.9;
 }
