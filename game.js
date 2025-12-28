@@ -606,19 +606,7 @@ async function handleTile(player, type) {
       break;
   }
 }
-function endTurn() {
-  currentPlayerIndex =
-    (currentPlayerIndex + 1) % players.length;
 
-  updateStockMarket();   // 新回合市場波動
-  updateUI();
-
-  log.textContent =
-    `▶ 換 ${players[currentPlayerIndex].name}，請擲骰`;
-
-  turnLocked = false;    // 🔓 解鎖
-  showDiceButton();      // 顯示擲骰按鈕
-}
 
 /* =========================
    破產檢查
@@ -630,35 +618,11 @@ function checkBankrupt(player) {
 }
 
 
-function showDiceButton() {
-  document.getElementById("dice-button-wrapper").classList.remove("hidden");
-}
-
-function hideDiceButton() {
-  document.getElementById("dice-button-wrapper").classList.add("hidden");
-}
-async function onDiceClick() {
-  if (turnLocked) return;   // 防止連點 / 自動觸發
-
-  turnLocked = true;        // 🔒 鎖回合
-  hideDiceButton();         // 隱藏擲骰按鈕
 
 
-}
 
 
-function showDiceModal(diceValue) {
-  const modal = document.getElementById("dice-modal");
-  const face = document.getElementById("dice-face");
-  const result = document.getElementById("dice-result");
 
-  result.textContent = "";
-  face.textContent = "🎲";
-  face.classList.add("dice-rolling");
-  modal.classList.remove("hidden");
-
-
-}
 
 
 
@@ -938,21 +902,20 @@ function closeTrade() {
 }
 
 function openIntro() {
-  document.getElementById("start-modal").style.display = "flex";
+  document.getElementById("start-modal").classList.remove("hidden");
 }
 
 function closeIntro() {
-  document.getElementById("start-modal").style.display = "none";
+  document.getElementById("start-modal").classList.add("hidden");
 }
 
 function startGame() {
-  document.getElementById("start-modal").style.display = "none";
+  document.getElementById("start-modal").classList.add("hidden");
   log.textContent = "🎮 遊戲開始，玩家 1 先行";
   updateUI();
-
-  // ✅ 第一位玩家，顯示擲骰按鈕
   showDiceButton();
 }
+
 
 
 function openDecisionLog() {

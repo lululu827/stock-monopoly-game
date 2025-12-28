@@ -25,15 +25,16 @@ body {
 
 
 .game-container {
-  height: calc(100vh - 220px);
+  min-height: 0;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start; 
   position: relative;
 }
 
 .board {
   margin: 0 auto;
+  margin-top: 40px; 
 }
 
 .tiles-container {
@@ -430,14 +431,13 @@ body {
 
 /* 🎲 擲骰浮動按鈕 */
 .dice-wrapper {
-  position: fixed;
+  position: absolute;
   left: 50%;
-  bottom: 160px;              /* ⭐ 明確 UI 操作區 */
+  bottom: 115px;          /* 與棋盤的固定距離（可微調） */
   transform: translateX(-50%);
-  z-index: 5000;
-
-  pointer-events: auto;
+  z-index: 50;
 }
+
 .dice-rolling {
   animation: shake 0.4s infinite;
 }
