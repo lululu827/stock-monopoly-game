@@ -179,11 +179,13 @@ function createPlayers() {
    資產計算與 UI 更新
 ========================= */
 function holdingsValue(player) {
-  return Object.keys(stocks).reduce(
-    (sum, sym) => sum + (player.stocks[sym] || 0) * stocks[sym].price,
-    0
-  );
+  return Object.keys(player.stocks).reduce((sum, sym) => {
+    const qty = player.stocks[sym] || 0;
+    const cost = player.avgCost[sym] || 0;
+    return sum + qty * cost;
+  }, 0);
 }
+
 
 function totalAsset(player) {
   return player.cash + holdingsValue(player);
@@ -989,6 +991,7 @@ createPlayers();
 updateStockMarket();
 updateUI();
 log.textContent = "📘 請閱讀遊戲說明後開始";
+
 
 
 
