@@ -839,11 +839,35 @@ function showEventModal({ title, sub = "", body = "", mode = "choice" }) {
 function confirmTrade() {
   let totalCost = 0;
 
+  // ① 計算交易總金額（買為正、賣為負）
   for (const [s, q] of Object.entries(tradeData)) {
+    totalCost += q * stocks[s].price;
+  }
+
+  // ② 檢查現金是否足夠（買股票）
+  if (totalCost > tradePlayer.cash) {
+    alert("❌ 現金不足，無法完成交易");
+    return;
+  }
+
+  // ③ 檢查賣出是否超過持股
+  for (const [s, q] of Object.entries(tradeData)) {
+    if (q < 0 && tradePlayer.stocks[s] < Math.abs(q)) {
+      alert(`❌ ${s} 持股不足，無法賣出`);
+      return;
+    }
+  }
+
+  // ④ 執行交易（更新持股與平均成本）
+  for (const [s, q] of Object.entries(tradeData)) {
+    if (q === 0) continue;
+
+    const price = stocks[s].price;
+
+    // 買入 → 更新平均成本
     if (q > 0) {
       const oldQty = tradePlayer.stocks[s];
       const oldAvg = tradePlayer.avgCost[s];
-      const price = stocks[s].price;
 
       const newQty = oldQty + q;
       const newAvg =
@@ -852,31 +876,14 @@ function confirmTrade() {
       tradePlayer.avgCost[s] = Math.round(newAvg);
     }
 
+    // 更新持股數
     tradePlayer.stocks[s] += q;
   }
 
-
-  // 現金不足
-  if (totalCost > tradePlayer.cash) {
-    alert("❌ 現金不足");
-    return;
-  }
-
-  // 持股不足
-  for (const [s, q] of Object.entries(tradeData)) {
-    if (q < 0 && tradePlayer.stocks[s] < Math.abs(q)) {
-      alert(`❌ ${s} 持股不足`);
-      return;
-    }
-  }
-
-  // 執行交易
-  for (const [s, q] of Object.entries(tradeData)) {
-    tradePlayer.stocks[s] += q;
-  }
-
+  // ⑤ 更新現金（買扣、賣加）
   tradePlayer.cash -= totalCost;
 
+  // ⑥ 紀錄決策
   recordDecision(
     tradePlayer,
     "股票",
@@ -884,15 +891,13 @@ function confirmTrade() {
     -totalCost,
     Object.entries(tradeData)
       .filter(([_, q]) => q !== 0)
-      .map(([s, q]) => `${s} ${q > 0 ? "買" : "賣"} ${Math.abs(q)} 張`)
+      .map(([s, q]) => `${s} ${q > 0 ? "買入" : "賣出"} ${Math.abs(q)} 張`)
       .join("，")
   );
 
   closeTrade();
-
   updateUI();
-  endTurn(); // ✅ 股票格：交易結束才換下一位
-
+  endTurn(); // 股票格：交易完成才換人
 }
 
 function closeTrade() {
@@ -940,4 +945,5 @@ createPlayers();
 updateStockMarket();
 updateUI();
 log.textContent = "📘 請閱讀遊戲說明後開始";
+
 
