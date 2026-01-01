@@ -345,11 +345,34 @@ const fateDeck = [
 ];
 
 const marketEventDeck = [
-  { title: "外資回補偏多", desc: "本回合股價偏正向波動。", bias: +0.04, vol: 0.10 },
-  { title: "美元走強偏空", desc: "本回合股價偏負向波動。", bias: -0.04, vol: 0.10 },
-  { title: "利率不確定升高", desc: "本回合波動放大（漲跌更大）。", vol: 0.14 },
-  { title: "成交量降溫盤整", desc: "本回合波動縮小（比較不動）。", vol: 0.06 }
+  {
+    title: "外資回補偏多",
+    desc: "外資資金回流，市場情緒偏多。",
+    effectText: "📈 本回合股價上漲機率提高",
+    bias: +0.04,
+    vol: 0.10
+  },
+  {
+    title: "美元走強偏空",
+    desc: "美元轉強，資金回流美國市場。",
+    effectText: "📉 本回合股價下跌機率提高",
+    bias: -0.04,
+    vol: 0.10
+  },
+  {
+    title: "利率不確定升高",
+    desc: "市場對未來利率方向分歧。",
+    effectText: "⚠️ 本回合股價波動幅度加大",
+    vol: 0.14
+  },
+  {
+    title: "成交量降溫盤整",
+    desc: "市場觀望氣氛濃厚。",
+    effectText: "➖ 本回合股價波動縮小",
+    vol: 0.06
+  }
 ];
+
 
 function drawCard(kind) {
   const deck = (kind === "chance") ? chanceDeck : fateDeck;
@@ -391,8 +414,9 @@ function applyMarketEvent() {
   });
 
   renderStockBoard();
-  return ev;
+  return ev; // ⭐ 回傳完整事件
 }
+
 
 /* =========================
    各種格子處理（拆開）
@@ -471,20 +495,40 @@ async function handleMarketTile(player) {
   const ok = await showEventModal({
     title: "🌍 市場事件",
     sub: `${player.icon} ${player.name}｜市場格`,
-    body: `市場因素將改變三檔股票的波動方式（不直接加減現金）。\n是否觸發本回合市場事件？`,
+    body: `
+市場環境將影響本回合股票價格走勢。
+
+是否觸發本回合市場事件？
+    `.trim(),
     mode: "choice"
   });
 
-  if (ok) {
-    const ev = applyMarketEvent();
-    recordDecision(player, "市場", "執行", 0, ev.title);
-    log.textContent += `｜🌍 ${ev.title}`;
-    updateUI();
-  } else {
+  if (!ok) {
     recordDecision(player, "市場", "放棄", 0, "略過市場事件");
     log.textContent += `｜⏭️ 略過市場事件`;
     updateUI();
+    return;
   }
+
+  const ev = applyMarketEvent();
+
+  // ⭐ 新增說明視窗
+  await showEventModal({
+    title: `🌍 市場事件｜${ev.title}`,
+    sub: "市場影響說明",
+    body: `
+${ev.desc}
+
+${ev.effectText}
+
+⏱️ 影響範圍：僅限本回合
+    `.trim(),
+    mode: "info"
+  });
+
+  recordDecision(player, "市場", "執行", 0, ev.title);
+  log.textContent += `｜🌍 ${ev.title}`;
+  updateUI();
 }
 
 async function handleStockTile(player) {
@@ -945,5 +989,6 @@ createPlayers();
 updateStockMarket();
 updateUI();
 log.textContent = "📘 請閱讀遊戲說明後開始";
+
 
 
